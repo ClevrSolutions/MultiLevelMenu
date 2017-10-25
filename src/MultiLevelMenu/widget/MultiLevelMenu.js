@@ -1,12 +1,23 @@
-// JSLint options:
-/*global dojo, require, mxui, mendix, mx, dijit */
-mxui.dom.addCss(require.toUrl("MultiLevelMenu/widget/ui/MulitLevelMenu.css"));
-define(["dojo/dom-geometry", "MultiLevelMenu/widget/MenuData", "dojo/window", "dojo/aspect", "dijit/form/TextBox", 
-    "dojo/on", "dojo/query", "dojo/dom-style", "dojo/dom-class", "dojo/_base/lang", "dojo/NodeList-traverse"], 
-function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass, lang) {
+define([
+    "dojo/_base/declare",
+    "mxui/widget/_WidgetBase",
+    "dijit/_TemplatedMixin",
+    "dojo/_base/lang",
+    "dojo/dom-class",
+    "dojo/dom-style",
+    "dojo/dom-construct",
+    "dojo/dom-attr",
+    "dojo/_base/event",
+    "dojo/text!MultiLevelMenu/widget/ui/MultiLevelMenu_button.html",
+    "dojo/text!MultiLevelMenu/widget/ui/MultiLevelMenu_splitButton.html",
+    "MultiLevelMenu/widget/MenuData"
+], function (declare, _WidgetBase, _TemplatedMixin, lang, domClass, domStyle, domConstruct, domAttr, event, noMicroflowTemplate, microflowTemplate, menuData) {
     //"use strict";  cannot use strict mode due to buildRending: this.inherited(arguments);
-    var MultiLevelMenu = {
-        mixins: [mendix.addon._Contextable, dijit._TemplatedMixin],
+    try {
+    return declare("MultiLevelMenu.widget.MultiLevelMenu", [ _WidgetBase, _TemplatedMixin ], {
+        
+        templateString: noMicroflowTemplate,
+        templateString: microflowTemplate,
         inputargs: {
             // Appearance
             captionText: "",
@@ -27,7 +38,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             prefetch: "onclickOnce",
             parentSelectable: "true",
             searchEnabled: false,
-            
+
             //data source   
             entitynote: "",
             reference: "",
@@ -66,8 +77,8 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
         dataSource: null,
         wrapperNode: null,
         searchInput: null,
-        noResultNode: null,  
-        
+        noResultNode: null,
+
         //handles
         handler: null,
         handlerReference: null,
@@ -77,7 +88,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
         scrollTimer: null,
         resizeTimer: null,
         searchTimer: null,
-        
+
         // template  variables
         domNode: null,
         label: null,
@@ -85,8 +96,8 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
         imageNode: null,
         dropDownButton: null,
         button: null,
-        validationDiv: null,   
-        
+        validationDiv: null,
+
         // Author: Andries Smit
         // Organisation: Flock of Birds
         // Version 2.2
@@ -144,16 +155,16 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
         // ADDED Default caption in the xml for translatable strings.
         // FIXED Destroy of menu wrapper, Not destroying the wrapper keeps the menu visible after closing a popup with an open menu.
         // FIXED AMD loading of all dojo modules. (fixes loading issue on MX5.15)
-        
+
         buildRendering: function () {
             // select a templated based on widget settings
             if (this.clickMicroflow === "")
-                this.templatePath = require.toUrl("MultiLevelMenu/widget/ui/MultiLevelMenu_button.html");
+                this.noMicroflowTemplate
             else
-                this.templatePath = require.toUrl("MultiLevelMenu/widget/ui/MultiLevelMenu_splitButton.html");
+                this.microflowTemplate
             this.inherited(arguments);
         },
-        
+
         postCreate: function () {
             // not shared objects
             this.context = null;
@@ -168,10 +179,10 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             this.scrollHandle = null;
             this.resizeHandle = null;
             this.scrollTimer = null,
-            this.resizeTimer = null,
-            this.searchInput = null,
-        
-            this.selectEntity = this.reference.split("/")[1];
+                this.resizeTimer = null,
+                this.searchInput = null,
+
+                this.selectEntity = this.reference.split("/")[1];
             this.targetReference = this.reference.split("/")[0];
             this.dataSource = new menuData({
                 "menuLevels": this.menuLevels,
@@ -195,10 +206,10 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
             this.renderHtml();
             this.validateConfig();
-            
-            this.initContext();
-            this.actLoaded();
-        },       
+
+            // this.initContext();
+            // this.actLoaded();
+        },
 
         onSubMenuEnter: function (evt) {
             // open sub menu item, calculate position (function was removed from bootstrap
@@ -215,19 +226,19 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
             if ((subMenupos.x + subMenupos.w) + 30 > ww) {
                 if (menupos.x - subMenupos.w > 0)
-                    dojo.setStyle(subMenu, "left", -subMenupos.w + "px");
+                domStyle.set(subMenu, "left", -subMenupos.w + "px");
                 else
-                    dojo.setStyle(subMenu, "left", -menupos.x + 15 + "px");
-            }   
-            
-            dojo.setStyle(subMenu, "top",  "0px"); //reset top
-            
-            var winh = win.getBox().h;            
-            if(winh < (subMenupos.y + subMenupos.h)){
-                if (winh > (subMenupos.h +10))
-                    dojo.setStyle(subMenu, "top", winh - (subMenupos.y + subMenupos.h) -10   + "px");
+                domStyle.set(subMenu, "left", -menupos.x + 15 + "px");
+            }
+
+            domStyle.set(subMenu, "top", "0px"); //reset top
+
+            var winh = win.getBox().h;
+            if (winh < (subMenupos.y + subMenupos.h)) {
+                if (winh > (subMenupos.h + 10))
+                domStyle.set(subMenu, "top", winh - (subMenupos.y + subMenupos.h) - 10 + "px");
                 else
-                    dojo.setStyle(subMenu, "top", -winh  + "px");                    
+                domStyle.set(subMenu, "top", -winh + "px");
             }
         },
 
@@ -237,10 +248,10 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                 console.warn("Mulitlevel Menu; setting Parent Selectable can only be used in combination with the recursive menu");
                 this.parentSelectable = false; // need to set to false for search function
             }
-            if (dojo.version.major === 4) {
-                this.showValidationMessage("This widget will not work in Mendix 4");
-                throw "Mendix 5 widget in Mendix 4";
-            }
+            // if (dojo.version.major === 4) {
+            //     this.showValidationMessage("This widget will not work in Mendix 4");
+            //     throw "Mendix 5 widget in Mendix 4";
+            // }
             if (this.recursive === true && this.menuLevels.length > 1) {
                 this.showValidationMessage("Configuration Error " + this.id + ": A recursive menu can only have one level");
                 return false;
@@ -269,29 +280,29 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
         appendMenu: function (menuData) {
             // add the menus to the button and append clear, will be called by data source, when completed            
-            var menu = this.getMenu(menuData);            
-            
+            var menu = this.getMenu(menuData);
+
             var $ = mxui.dom.create;
             if( this.searchEnabled ){
                 this.searchInput = new TextBox({
                     name: "menuSearch",
                     class: "searchInput",
-                    onClick: function(e){dojo.stopEvent(e);},
+                    onClick: function(e){ event.stop(e);},
                     onKeyUp: lang.hitch(this,function(){
                         //timer on update for better performance
                         if(this.scrollTimer)
                             clearTimeout(this.searchTimer);
-                        this.searchTimer = setTimeout(lang.hitch(this, this.filterList, menu), 50);                        
+                        this.searchTimer = setTimeout(lang.hitch(this, this.filterList, menu), 50);
                     })
                 });
-                
+
                 var filter = $("form", {"class" : "filterform"}, this.searchInput.domNode);
-                dojo.place(filter, menu, "first");
+                domConstruct.place(filter, menu, "first");
                 this.noResultNode = $("li", {"class" : "no-result hidden", "role": "presentation"}, this.noResultCaption);
                 menu.appendChild( this.noResultNode );
             }
-               
-            if (this.clearText !== "") {                
+
+            if (this.clearText !== "") {
                 var clearButton = $("a", {
                     tabindex: "-1",
                     href: "#"
@@ -310,40 +321,40 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                     class: "nav-header clearSelection"
                 }, clearButton);
                 menu.appendChild(listItem);
-            }            
-            
+            }
+
             this.menuNode = menu;
-            this.dataLoaded = true;            
+            this.dataLoaded = true;
             if (this.prefetch === "onclickOnce" || this.prefetch === "onclick")
-                dojo.destroy(this.loadingMenuNode);
-                
+            domConstruct.destroy(this.loadingMenuNode);
+
             // Create wrapper node containing the ul with the menu data
             if (this.wrapperNode)
-                dojo.destroy(this.wrapperNode);
-                        
+            domConstruct.destroy(this.wrapperNode);
+
             this.wrapperNode= $("div", {
-                class: "mlMenuDataContainer"            	
-            });         
+                class: "mlMenuDataContainer"
+            });
             this.wrapperNode.appendChild(menu);
-                                    
+
             //calculate wrapper node position and append to body
-            document.body.appendChild(this.wrapperNode);				
+            document.body.appendChild(this.wrapperNode);
             this.positionDropdown(this.wrapperNode);
             this.searchInput && this.searchInput.focus();
         },
-        
+
         filterList: function(menu){
             this.closeSubMenus(menu);
             var value = this.searchInput.get("value").toLowerCase().replace(/['"]+/g, '');
             if(value){
                 // find all (data) items that do not match the value, exclude the standard menu items, and hide them.
-                var cssFilter = 'li:not(.hidden):not(.no-result):not(.divider):not(.clearSelection) > a:not(a[search-data*="' + value + '"])'; 
+                var cssFilter = 'li:not(.hidden):not(.no-result):not(.divider):not(.clearSelection) > a:not(a[search-data*="' + value + '"])';
                 // filter only on submenus when parents are selectable
-                if(! this.parentSelectable) cssFilter += ':not(.subMenu)'; 
+                if(! this.parentSelectable) cssFilter += ':not(.subMenu)';
                 var list = query(cssFilter, menu);
                 list.parent().addClass("hidden");
                 // find all items that match and show them (unhide)
-                cssFilter = 'li.hidden > a[search-data*="' + value + '"]';                     
+                cssFilter = 'li.hidden > a[search-data*="' + value + '"]';
                 list = query(cssFilter, menu);
                 list.parent().removeClass("hidden");
                 var parentSelectable = this.parentSelectable;
@@ -354,15 +365,15 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                         // find submenu has item that are not hidden.
                         var subItemsVis = query("li:not(.hidden)",subMenuNode);
                         if(subItemsVis.length > 0){ // has items, so show
-                                domClass.remove(subMenuNode, "hidden");
-                                parentSelectable && domClass.remove(subMenuNode, "hidden-submenu");
-                        } else {
-                            if(parentSelectable){ 
+                            domClass.remove(subMenuNode, "hidden");
+                            parentSelectable && domClass.remove(subMenuNode, "hidden-submenu");
+                    } else {
+                        if(parentSelectable){ 
                                 // this is sub menu selectable but has no sub menu items, so hide only the sub menu
                                 domClass.add(subMenuNode, "hidden-submenu");
                             } else {
                                 // sub menu is not selectable and has not children, so should be hidden
-                                domClass.add(subMenuNode, "hidden");                                
+                                domClass.add(subMenuNode, "hidden");
                             }
                         }
                     });
@@ -372,16 +383,16 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
                 if(list.length === 0)
                     domClass.remove(this.noResultNode, "hidden");
-                else 
+                else
                     domClass.add(this.noResultNode, "hidden");
-            } else { 
+            } else {
                 // no search, so remove all classes to make them hidden. 
                 query("li.hidden", menu).removeClass("hidden");
                 query("li.hidden-submenu", menu).removeClass("hidden-submenu");
                 domClass.add(this.noResultNode, "hidden");
-            }  
+            }
         },
-        
+
         positionDropdown: function (node){            
             if(this.shown === true){
                 if(!this.scrollHandle){
@@ -415,28 +426,28 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             }
             if(this.btnGroup){
                 //positions the wrapper node relative to button
-                var btnPos = domGeom.position(this.btnGroup); 
+                var btnPos = domGeom.position(this.btnGroup);
 
-                dojo.setStyle(node, "left", btnPos.x  + "px");
-                dojo.setStyle(node, "top", (btnPos.y + btnPos.h)  + "px");
+                domStyle.set(node, "left", btnPos.x + "px");
+                domStyle.set(node, "top", (btnPos.y + btnPos.h) + "px");
                 if(node.firstChild){
                     var menupos = domGeom.position(node.firstChild), winh = win.getBox().h;
                     if(this.elementInView(this.btnGroup)){
                         if(winh < (menupos.y + menupos.h)){
-                                dojo.setStyle(node, "left", btnPos.x + 10 + "px");
+                            domStyle.set(node, "left", btnPos.x + 10 + "px");
                             if (winh > (menupos.h +10))
-                                dojo.setStyle(node, "top", (winh - menupos.h -20)   + "px");
+                            domStyle.set(node, "top", (winh - menupos.h -20) + "px");
                             else
-                                dojo.setStyle(node, "top", 0  + "px");                    
+                            domStyle.set(node, "top", 0 + "px");
                         }
                     } else {
-                        if(winh < (menupos.y + menupos.h)){
-                            dojo.setStyle(node, "left", btnPos.x + 10 + "px");
-                            dojo.setStyle(node, "top", (btnPos.y - menupos.h)   + "px");
+                        if(winh < (menupos.y + menupos.h)) {
+                            domStyle.set(node, "left", btnPos.x + 10 + "px");
+                            domStyle.set(node, "top", (btnPos.y - menupos.h) + "px");
                         }
                     }
-                }    
-            }            
+                }
+            }
         },
 
         closeSubMenus: function (menu) {
@@ -446,12 +457,12 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
         getMenu: function (menuData) {
             // render the bootstrap drop down menus
-            var $ = mxui.dom.create;         
+            var $ = mxui.dom.create;
 
             var menu = $("ul", {
                 class: "dropdown-menu",
                 role: "menu"
-            });            
+            });
             var hasSubmenu = false;
             for (var i = 0; i < menuData.length; i++) {
                 if (menuData[i].children !== null) {
@@ -472,10 +483,10 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                     if(this.parentSelectable){
                         this.connect(subLink, "ondblclick", lang.hitch(this, this.onItemSelect));
                         this.connect(subLink, "onclick", lang.hitch(this, function(link, e){
-                            if(dojo.hasClass(link.parentNode, "hidden-submenu")){
+                            if (domClass.contains(link.parentNode, "hidden-submenu")){
                                 // in search mode the parent can be selected with a single click.
                                 this.onItemSelect(e);
-                                dojo.stopEvent(e);
+                                event.stop(e);
                             }
                         }, subLink));
                     }
@@ -506,21 +517,21 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             }
             if (menuData.length === 0 && this.noMenuItemsCaption !== "") {
                 menu.appendChild(this.noMenuItemsMenu());
-            }            
+            }
             return menu;
         },
 
         setLoadingMenu: function () {
             // create temporary loading menu for lazy loading 
             if (this.loadingMenuNode)
-                dojo.destroy(this.loadingMenuNode);
+            domConstruct.destroy(this.loadingMenuNode);
 
             var $ = mxui.dom.create;
 
             var node = $("ul", {
-                    class: "dropdown-menu",
-                    role: "menu"
-                },
+                class: "dropdown-menu",
+                role: "menu"
+            },
                 $("li", {
                     class: "dropdown-header"
                 }, this.loadingText));
@@ -543,7 +554,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             if (this.counterMenuItem >= this.maxMenuItems && this.maxMicroflow) {
                 if (this.prefetch === "onclickOnce" || this.prefetch === "onclick")
                     this.execution(this.maxMicroflow);
-                this.loadingMenuNode && dojo.destroy(this.loadingMenuNode);
+                this.loadingMenuNode && domConstruct.destroy(this.loadingMenuNode);
 
                 return true;
             }
@@ -551,7 +562,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                 this.showValidationMessage("Error loading menu: to many items to display");
                 this.errorMenu = true;
                 if (this.loadingMenuNode)
-                    dojo.destroy(this.loadingMenuNode);
+                domConstruct.destroy(this.loadingMenuNode);
                 if(this.isOpen()) this.close();
                 return true;
             }
@@ -585,7 +596,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
         onItemSelect: function (evt) {
             // a menu item selection handler
-            var mxGUID = dojo.getAttr(evt.target, "mxGUID");
+            var mxGUID = domAttr.get(evt.target, "mxGUID");
 
             mxGUID && this.context.set(this.targetReference, mxGUID);
 
@@ -622,7 +633,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             mxui.dom.html(this.label, "Button loading");
 
             this.connect(this.dropDownButton, "onclick", lang.hitch(this, this.toggle));
-            this.button && this.connect(this.button, "onclick", lang.hitch(this, this.execution, this.clickMicroflow));   
+            this.button && this.connect(this.button, "onclick", lang.hitch(this, this.execution, this.clickMicroflow));
             this.connect(document, "click", lang.hitch(this, this.close));
         },
 
@@ -648,7 +659,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                 return false;
             }
             this.isOpen() || domClass.add(this.btnGroup, "open");
-            if (this.prefetch === "onclickOnce" && !this.dataLoaded){ 
+            if (this.prefetch === "onclickOnce" && !this.dataLoaded){
                 this.setLoadingMenu();
                 this.dataSource.loadData();
             }
@@ -656,15 +667,15 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                 this.counterMenuItem = 0;
                 if (this.validationDiv)
                     domStyle.set(this.validationDiv, "display", "none");
-                this.menuNode && dojo.destroy(this.menuNode);
+                this.menuNode && domConstruct.destroy(this.menuNode);
                 this.setLoadingMenu();
                 this.dataSource.loadData();
             }
-                        
-            this.shown = true;            
+
+            this.shown = true;
             if (this.wrapperNode) {
                 // TODO close time out does not work anymore
-                 this.stayOpenHandler = this.connect(this.domNode, "onmouseenter", lang.hitch(this, function(){
+                this.stayOpenHandler = this.connect(this.domNode, "onmouseenter", lang.hitch(this, function(){
                     clearTimeout(this.timer);
                 }));
                 this.closeHandler = this.connect(this.wrapperNode.firstChild, "onblur", lang.hitch(this, function(){
@@ -699,13 +710,13 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                     domClass.remove(this.wrapperNode, 'open');
                     query("*", this.wrapperNode).removeClass('open');
                 }
-            }            
+            }
             this.shown = false;
         },
 
         domIsDisabled: function () {
             // returns whether the dropdown is currently disabled.
-            return dojo.hasClass(this.dropDownButton, "disabled");
+            return domClass.contains(this.dropDownButton, "disabled");
         },
 
         isOpen: function () {
@@ -733,7 +744,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             // update the button label, enable, error message
             if (this._beingDestroyed || this._destroyed) //need check, bug mendix will do a second refresh resulting destroyed but still active instance
                 return;
-            var object = dojo.isArray(mxObject) ? mxObject[0] : mxObject;
+            var object = mxObject instanceof Array ? mxObject[0] : mxObject;
             var value = "&nbsp";
             if (object && this.displayFormat !== "") {
                 value = object.get(this.displayFormat);
@@ -765,7 +776,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
                 this.isInactive = true;
             else
                 this.isInactive = false;
-            var disabled = dojo.hasClass(this.dropDownButton, "disabled"); //TODO us function isDomDisabled
+            var disabled = domClass.contains(this.dropDownButton, "disabled"); //TODO us function isDomDisabled
 
             if (!disabled && this.isInactive) {
                 this.button && domClass.add(this.button, "disabled");
@@ -810,8 +821,8 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
 
                         var valid = this.validateConfig();
                         if (valid === true && this.prefetch === "onload") {
-                            this.dataSource.loadData();                            
-                        } 
+                            this.dataSource.loadData();
+                        }
                         this.updateButtonLabel();
                         this.handler = mx.data.subscribe({
                             guid: context.getGuid(),
@@ -833,7 +844,7 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             } else {
                 this.context = null;
                 this.dataSource.context = null;
-                
+
                 this.callBackUpdateButtonLabel(null);
             }
             callback && callback();
@@ -844,14 +855,12 @@ function (domGeom, menuData, win, aspect, TextBox, on, query, domStyle, domClass
             mx.data.unsubscribe(this.handler);
             mx.data.unsubscribe(this.handlerValidation);
             mx.data.unsubscribe(this.handlerReference);
-            this.domNode && dojo.destroy(this.domNode);
-            this.wrapperNode && dojo.destroy(this.wrapperNode);
+            this.domNode && domConstruct.destroy(this.domNode);
+            this.wrapperNode && domConstruct.destroy(this.wrapperNode);
             console.debug(this.id + ".uninitialize");
         }
+    });
+} catch(e) {console.log(e)}
+});
 
-    };
-    mxui.widget.declare('MultiLevelMenu.widget.MultiLevelMenu', MultiLevelMenu);
-});
-require(['MultiLevelMenu/widget/MultiLevelMenu'], function () {
-    'use strict';
-});
+require([ "MultiLevelMenu/widget/MultiLevelMenu" ]);

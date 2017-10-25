@@ -1,9 +1,9 @@
 // JSLint options:
 /*global dojo, mendix, mx*/
-define(["dojo/_base/declare", "dojo/_base/lang"], function (declare,  lang) {
+define(["dojo/_base/declare", "mxui/widget/_WidgetBase", "dojo/_base/lang"], function (declare, _WidgetBase,  lang) {
     "use strict";
 
-    return declare("MultiLevelMenu.widget.MenuData", null, {
+    return declare("MultiLevelMenu.widget.MenuData", [ _WidgetBase ], {
         childCache: [],
         menuWidget: null,
         rendering: false,    
@@ -341,4 +341,7 @@ define(["dojo/_base/declare", "dojo/_base/lang"], function (declare,  lang) {
                 this.getParentLevel(parents, nextLevel);
         }
     });
+});
+require([ 'MultiLevelMenu/widget/MenuData' ], function () {
+    'use strict';
 });
