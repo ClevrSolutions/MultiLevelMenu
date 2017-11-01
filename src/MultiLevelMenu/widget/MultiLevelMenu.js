@@ -8,17 +8,21 @@ define([
     "dojo/dom-construct",
     "dojo/dom-attr",
     "dojo/_base/event",
+    "dijit/form/TextBox",
+    "dojo/dom-geometry",
+    "dojo/window",
+    "dojo/query",
+    "mxui/dom",
     "dojo/text!MultiLevelMenu/widget/ui/MultiLevelMenu_button.html",
     "dojo/text!MultiLevelMenu/widget/ui/MultiLevelMenu_splitButton.html",
     "MultiLevelMenu/widget/MenuData"
-], function (declare, _WidgetBase, _TemplatedMixin, lang, domClass, domStyle, domConstruct, domAttr, event, noMicroflowTemplate, microflowTemplate, menuData) {
+], function (declare, _WidgetBase, _TemplatedMixin, lang, domClass, domStyle, domConstruct, domAttr, event, TextBox, domGeom, win, query, dom, noMicroflowTemplate, microflowTemplate, menuData) {
     //"use strict";  cannot use strict mode due to buildRending: this.inherited(arguments);
     try {
     return declare("MultiLevelMenu.widget.MultiLevelMenu", [ _WidgetBase, _TemplatedMixin ], {
         
         templateString: noMicroflowTemplate,
         templateString: microflowTemplate,
-        inputargs: {
             // Appearance
             captionText: "",
             noMenuItemsCaption: "",
@@ -55,8 +59,7 @@ define([
             //selectable objects
             entityConstraint: "",
             dsMicroflow: "",
-            class: ""
-        },
+            class: "",
 
         //Caches
         context: null,
@@ -166,6 +169,7 @@ define([
         },
 
         postCreate: function () {
+            dom.addCss("widgets/MultiLevelMenu/widget/ui/MulitLevelMenu.css");
             // not shared objects
             this.context = null;
             this.mlMenuButton = null;
@@ -350,13 +354,17 @@ define([
                 // find all (data) items that do not match the value, exclude the standard menu items, and hide them.
                 var cssFilter = 'li:not(.hidden):not(.no-result):not(.divider):not(.clearSelection) > a:not(a[search-data*="' + value + '"])';
                 // filter only on submenus when parents are selectable
-                if(! this.parentSelectable) cssFilter += ':not(.subMenu)';
+                if(!this.parentSelectable) { cssFilter += ':not(.subMenu)'; }
                 var list = query(cssFilter, menu);
-                list.parent().addClass("hidden");
+                list.forEach(function(listItem) {
+                    listItem.parentElement.classList.add("hidden");
+                });
                 // find all items that match and show them (unhide)
                 cssFilter = 'li.hidden > a[search-data*="' + value + '"]';
                 list = query(cssFilter, menu);
-                list.parent().removeClass("hidden");
+                list.forEach(function(listItem) {
+                    listItem.parentElement.classList.remove("hidden");
+                });
                 var parentSelectable = this.parentSelectable;
                 for(var i=0; i < 5 ; i++){
                     // TODO loop trough each level could be more efficient
@@ -396,7 +404,7 @@ define([
         positionDropdown: function (node){            
             if(this.shown === true){
                 if(!this.scrollHandle){
-                    var panel = query(this.domNode).closest(".mx-layoutcontainer-wrapper");
+                    var panel = query(this.domNode)[0].closest(".mx-layoutcontainer-wrapper");
                     if(panel.length > 0){
                         this.scrollHandle = on(panel, "scroll", lang.hitch(this, function(){
                             //timer on update for better performance
@@ -408,7 +416,7 @@ define([
                     }
                 }
                 if(!this.resizeHandle){
-                    var panel = query(this.domNode).closest(".mx-layoutcontainer-wrapper");
+                    var panel = query(this.domNode)[0].closest(".mx-layoutcontainer-wrapper");
                     if(panel.length > 0){
                         this.resizeHandle = aspect.after(this.mxform, "resize", lang.hitch(this, function(){
                             if(this.resizeTimer)
@@ -728,8 +736,7 @@ define([
             // get the data of the new button label
             if (this.context.get(this.targetReference) !== "") {
                 mx.data.get({
-                    guid: this.context.get(this.targetReference),
-                    count: true,
+                    guid: this.context.getGuid(),
                     callback: lang.hitch(this, this.callBackUpdateButtonLabel),
                     error: function (error) {
                         console.error("Error in updateButtonLabel: " + error.description);
@@ -763,7 +770,7 @@ define([
                     mxui.dom.html(this.label, "&nbsp;");
                 }
             }
-            this.readOnlyBool = true;
+            // this.readOnlyBool = false;
             var disableCondition = false;
             if (this.context) {
                 this.readOnlyBool = this.context.isReadonlyAttr(this.targetReference);
@@ -772,11 +779,11 @@ define([
                 }
             }
 
-            if (this.readOnlyBool === true || this.readonly === "true" || this.isDisabled === true || disableCondition === true || !this.context)
+            if (this.readonly === "true" || this.isDisabled === true || disableCondition === true || !this.context)
                 this.isInactive = true;
             else
                 this.isInactive = false;
-            var disabled = domClass.contains(this.dropDownButton, "disabled"); //TODO us function isDomDisabled
+            var disabled = this.dropDownButton.disabled; //TODO us function isDomDisabled
 
             if (!disabled && this.isInactive) {
                 this.button && domClass.add(this.button, "disabled");
