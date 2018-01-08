@@ -606,8 +606,7 @@ define([
             // a menu item selection handler
             var mxGUID = domAttr.get(evt.target, "mxGUID");
 
-            mxGUID && this.context.set(this.targetReference, mxGUID);
-
+            mxGUID && this.context.addReference(this.targetReference, mxGUID);
             this.updateButtonLabel();
             this.close();
 
@@ -734,9 +733,10 @@ define([
 
         updateButtonLabel: function () {
             // get the data of the new button label
-            if (this.context.get(this.targetReference) !== "") {
+            if (this.context.getReference(this.targetReference) !== "") {
                 mx.data.get({
-                    guid: this.context.getGuid(),
+                    guid: this.context.getReference(this.targetReference),
+                    count: true,
                     callback: lang.hitch(this, this.callBackUpdateButtonLabel),
                     error: function (error) {
                         console.error("Error in updateButtonLabel: " + error.description);
@@ -770,7 +770,7 @@ define([
                     mxui.dom.html(this.label, "&nbsp;");
                 }
             }
-            // this.readOnlyBool = false;
+            // this.readOnlyBool = true;
             var disableCondition = false;
             if (this.context) {
                 this.readOnlyBool = this.context.isReadonlyAttr(this.targetReference);
@@ -779,11 +779,11 @@ define([
                 }
             }
 
-            if (this.readonly === "true" || this.isDisabled === true || disableCondition === true || !this.context)
-                this.isInactive = true;
-            else
+            // if (this.readOnlyBool === true || this.readonly === "true" || this.isDisabled === true || disableCondition === true || !this.context)
+                // this.isInactive = true;
+            // else
                 this.isInactive = false;
-            var disabled = this.dropDownButton.disabled; //TODO us function isDomDisabled
+            var disabled = domClass.contains(this.dropDownButton, "disabled"); //TODO us function isDomDisabled
 
             if (!disabled && this.isInactive) {
                 this.button && domClass.add(this.button, "disabled");
